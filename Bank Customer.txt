@@ -1,0 +1,125 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Import necessary libraries for data handling and visualization
+
+df = pd.read_csv("Customer-Churn-Records.csv")
+# Read the dataset into a Pandas DataFrame
+
+df.head()
+# Display the first few rows of the DataFrame
+
+df.shape
+# Show the shape (rows, columns) of the DataFrame
+
+df.describe()
+# Provide descriptive statistics of the numerical columns in the DataFrame
+
+df.isnull()
+# Check for null values in the DataFrame (this doesn't modify the DataFrame)
+
+df.isnull().sum()
+# Summarize the count of null values for each column
+
+df.info()
+# Display concise information about the DataFrame, including data types and memory usage
+
+df.dtypes
+# Show the data types of each column in the DataFrame
+
+df.columns
+# Display the column names in the DataFrame
+
+df = df.drop(['RowNumber','Surname','CustomerId'],axis=1)
+# Remove specific columns ('RowNumber', 'Surname', 'CustomerId') from the DataFrame
+
+df.head()
+# Display the DataFrame after dropping the specified columns
+
+def visualization(x, y, xlabel):
+    plt.figure(figsize=(10,5))
+    plt.hist([x, y], color=['red', 'green'], label = ['exit', 'not_exit'])
+    plt.xlabel(xlabel,fontsize=20)
+    plt.ylabel("No. of customers", fontsize=20)
+    plt.legend()
+# Define a function for creating a histogram visualization with two data sets (x and y)
+
+df_churn_exited = df[df['Exited']==1]['Tenure']
+df_churn_not_exited = df[df['Exited']==0]['Tenure']
+# Create subsets of data for customers who exited and those who did not, based on 'Exited' column
+
+visualization(df_churn_exited, df_churn_not_exited, "Tenure")
+# Use the defined function to visualize 'Tenure' for churned and non-churned customers
+
+X = df[['CreditScore','Gender','Age','Tenure','Balance','NumOfProducts','HasCrCard','IsActiveMember','EstimatedSalary']]
+states = pd.get_dummies(df['Geography'],drop_first = True)
+gender = pd.get_dummies(df['Gender'],drop_first = True)
+
+# Create a DataFrame 'X' containing selected columns for model features
+# Generate dummy variables for 'Geography' and 'Gender' columns to handle categorical data
+
+df = pd.concat([df,gender,states], axis = 1)
+# Concatenate the original DataFrame with the newly created dummy variable DataFrames
+
+X = df[['CreditScore','Age','Tenure','Balance','NumOfProducts','HasCrCard','IsActiveMember','EstimatedSalary','Male','Germany','Spain']]
+# Update 'X' to include the selected columns along with the dummy variables
+
+y = df['Exited']
+# Define the target variable 'y' as the 'Exited' column (presumably indicating customer churn)
+
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size = 0.30)
+# Split the data into training and testing sets (70% training, 30% testing)
+
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+# Standardize the features by scaling them for better model performance
+
+import keras
+from keras.models import Sequential
+from keras.layers import Dense
+
+classifier = Sequential()
+# Import necessary libraries for building an Artificial Neural Network (ANN) and initialize a sequential model
+
+classifier.add(Dense(activation = "relu",input_dim = 11,units = 6,kernel_initializer = "uniform"))
+# Add the first hidden layer to the neural network with 'relu' activation, 6 units/neurons, and uniform weight initialization
+
+classifier.add(Dense(activation = "relu",units = 6,kernel_initializer = "uniform"))
+# Add a second hidden layer with similar specifications
+
+classifier.add(Dense(activation = "sigmoid",units = 1,kernel_initializer = "uniform"))
+# Add the output layer with 'sigmoid' activation for binary classification
+
+classifier.compile(optimizer="adam",loss = 'binary_crossentropy',metrics = ['accuracy'])
+# Compile the ANN model with 'adam' optimizer, 'binary_crossentropy' loss function, and 'accuracy' metric
+
+classifier.fit(X_train,y_train,batch_size=10,epochs=50)
+# Train the ANN model on the training data with 50 epochs and a batch size of 10
+
+y_pred =classifier.predict(X_test)
+y_pred = (y_pred > 0.5)
+# Make predictions on the test set and set a threshold of 0.5 for classification
+
+from sklearn.metrics import confusion_matrix,accuracy_score,classification_report
+
+cm = confusion_matrix(y_test,y_pred)
+# Calculate the confusion matrix to evaluate the model's performance
+
+accuracy = accuracy_score(y_test,y_pred)
+# Calculate the accuracy score of the model
+
+plt.figure(figsize = (10,7))
+sns.heatmap(cm,annot = True)
+plt.xlabel('Predicted')
+plt.ylabel('Truth')
+# Visualize the confusion matrix using Seaborn's heatmap
+
+print(classification_report(y_test,y_pred))
+# Display a classification report including precision, recall, and F1-score
+

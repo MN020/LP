@@ -1,0 +1,80 @@
+import pandas as pd
+import numpy as np
+from sklearn import metrics
+
+# Import necessary libraries for data manipulation and metrics calculation
+
+df = pd.read_csv("diabetes.csv")
+df
+
+# Read a CSV file named "diabetes.csv" into a Pandas DataFrame called 'df' and display the DataFrame
+
+df.shape
+
+# Show the shape (rows, columns) of the DataFrame
+
+df.head
+
+# Display the function signature 'head' without executing it. It should be df.head() to display the first few rows of the DataFrame
+
+df.isnull().any().value_counts()
+
+# Check for null values in the DataFrame. 'any()' checks for any null values, 'value_counts()' counts the occurrences of True/False for any null values
+
+df.columns
+
+# Display the column names in the DataFrame
+
+df_x = df.drop(columns='Outcome', axis=1)
+df_y = df['Outcome']
+
+# Split the DataFrame into features 'df_x' (all columns except 'Outcome') and target 'df_y' ('Outcome' column)
+
+from sklearn.preprocessing import StandardScaler
+scale = StandardScaler()
+scaledX = scale.fit_transform(df_x)
+
+# Import StandardScaler from scikit-learn and scale the features in 'df_x' using fit_transform method
+
+from sklearn.model_selection import train_test_split
+
+x_train, x_test, y_train, y_test = train_test_split(scaledX, df_y, test_size=0.2, random_state=42)
+
+# Split the data into training and testing sets with 80% for training and 20% for testing
+
+from sklearn.neighbors import KNeighborsClassifier
+knn = KNeighborsClassifier(n_neighbors=7)
+knn.fit(x_train, y_train)
+y_pred = knn.predict(x_test)
+
+# Use K-Nearest Neighbors (KNN) classifier with 7 neighbors, fit it to the training data, and make predictions on the test data
+
+cs = metrics.confusion_matrix(y_test, y_pred)
+print("Confusion matrix: \n", cs)
+
+# Calculate and print the confusion matrix using actual and predicted values from the test set
+
+ac = metrics.accuracy_score(y_test, y_pred)
+print("Accuracy score: ", ac)
+
+# Calculate and print the accuracy score of the classifier on the test set
+
+er = 1 - ac
+print("Error rate: ", er)
+
+# Calculate and print the error rate (1 - accuracy)
+
+p = metrics.precision_score(y_test, y_pred)
+print("Precision: ", p)
+
+# Calculate and print the precision score of the classifier on the test set
+
+r = metrics.recall_score(y_test, y_pred)
+print("Recall: ", r)
+
+# Calculate and print the recall score of the classifier on the test set
+
+cr = metrics.classification_report(y_test, y_pred)
+print("Classification report: \n\n", cr)
+
+# Generate and print a classification report containing precision, recall, F1-score, and support for each class
